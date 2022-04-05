@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<petrinet:PetriNet
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:petrinet="http://petrinet"
+    xsi:schemaLocation="http://petrinet PetriNet.ecore">
+  <petrinetelement
+      xsi:type="petrinet:Place"
+      name="Automne"
+      tokens="1"/>
+  <petrinetelement
+      xsi:type="petrinet:Place"
+      name="Été"/>
+  <petrinetelement
+      xsi:type="petrinet:Place"
+      name="Hiver"/>
+  <petrinetelement
+      xsi:type="petrinet:Place"
+      name="Printemps"/>
+  <petrinetelement
+      xsi:type="petrinet:Transition"
+      name="T1"/>
+  <petrinetelement
+      xsi:type="petrinet:Transition"
+      name="T2"/>
+  <petrinetelement
+      xsi:type="petrinet:Transition"
+      name="T3"/>
+  <petrinetelement
+      xsi:type="petrinet:Transition"
+      name="T4"/>
+</petrinet:PetriNet>

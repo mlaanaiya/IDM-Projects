@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplepdl:Process
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:simplepdl="http://simplepdl"
+    xsi:schemaLocation="http://simplepdl SimplePDL.ecore">
+  <processElements
+      xsi:type="simplepdl:WorkDefinition"
+      name="H"/>
+  <processElements
+      xsi:type="simplepdl:WorkSequence"/>
+  <processElements
+      xsi:type="simplepdl:WorkDefinition"
+      name="Hello"/>
+  <processElements
+      xsi:type="simplepdl:WorkDefinition"
+      name="Hello"/>
+</simplepdl:Process>

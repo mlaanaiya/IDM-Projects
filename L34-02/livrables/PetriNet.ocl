@@ -1,0 +1,29 @@
+import 'PetriNet.ecore'
+package petrinet
+
+context PetriNet
+inv validName('Invalid name: ' + self.name):
+	self.name.matches('[A-Za-z_][A-Za-z0-9_]*')
+
+context Place
+inv marquageInitial: self.tokens >= 0
+
+context Arc
+inv liaisonPetri: self.nodesource.oclAsType(Place) <> self.nodedestination.oclAsType(Transition)
+				or self.nodesource.oclAsType(Transition) <> self.nodedestination.oclAsType(Place)
+
+context Place
+inv validNamePlace('Invalid name: ' + self.name):
+	self.name.matches('[P0-9_][0-9_]*')
+
+context Transition
+inv validNameTransition('Invalid name: ' + self.name):
+	self.name.matches('[T0-9_][0-9_]*')
+	
+context Node
+inv notSameName: self.PetriNet.petrinetelement
+				-> select(p | p.oclIsKindOf(Node))
+				-> collect(p | p.oclAsType(Node))
+				-> forAll(n | self = n or self.name <> n.name)
+	
+endpackage

@@ -1,0 +1,151 @@
+module SimplePDL2PetriNet;
+create OUT: petrinet from  IN: simplepdl;
+
+-- Obtenir le processus qui contient ce process element.
+-- Remarque: Ce helper ne serait pas utile si une r�f�rence opposite
+-- avait �t� plac�e entre Process et ProcessElement
+helper context simplepdl!ProcessElement
+def: getProcess(): simplepdl!Process =
+	simplepdl!Process.allInstances()
+		->select(p | p.processElements->includes(self))
+		->asSequence()->first();
+
+-- Traduire un Process en un PetriNet de m�me nom
+rule Process2PetriNet {
+	from p: simplepdl!Process
+	to pn: petrinet!PetriNet (name <- p.name)
+	do { pn.petrinetelement <- petrinet!Arc.allInstances()
+		->union(petrinet!Place.allInstances())
+		->union(petrinet!Transition.allInstances());
+	}
+}
+
+-- Traduire une WorkDefinition en un motif sur le r�seau de Petri
+rule WorkDefinition2PetriNet {
+	from wd: simplepdl!WorkDefinition
+	to
+		-- PLACES d'une WorkDefinition
+		p_ready: petrinet!Place(
+				name <- wd.name + '_ready',
+				tokens <- 1,
+				net <- wd.getProcess()),
+				
+		p_started: petrinet!Place(
+				name <- wd.name + '_started',
+				tokens <- 0,
+				net <- wd.getProcess()),
+			
+		p_running: petrinet!Place(
+				name <- wd.name + '_running',
+				tokens <- 0,
+				net <- wd.getProcess()),
+				
+		p_finished: petrinet!Place(
+				name <- wd.name + '_finished',
+				tokens <- 0,
+				net <- wd.getProcess()),
+				
+
+ -- TRANSITIONS d'une WorkDefinition
+t_started: petrinet!Transition(
+  name <- wd.name + '_start',
+ net <- wd.getProcess()),
+ 
+   t_finished: petrinet!Transition(
+  name <- wd.name + '_finish',
+  net <- wd.getProcess()),  
+
+-- ARCS d'une WorkDefinition
+a_tstarted_to_pstarted : petrinet!Arc(
+                nodesource <-t_started,
+nodedestination <-p_started,
+weigth <- 1 ,
+                        arc <- #normal,
+net <- wd.getProcess()),
+
+a_pready_to_tstarted : petrinet!Arc(
+                nodesource <-p_ready,
+nodedestination <-t_started,
+weigth <- 1 ,
+                        arc <- #normal,
+net <- wd.getProcess()),
+
+a_prunning_to_tfinished : petrinet!Arc(
+                nodesource <-p_running,
+nodedestination <-t_finished,
+weigth <- 1 ,
+                        arc <- #normal,
+net <- wd.getProcess()),
+
+a_tstarted_to_prunning : petrinet!Arc(
+                nodesource <-t_started,
+nodedestination <-p_running,
+weigth <- 1 ,
+                        arc <- #normal,
+net <- wd.getProcess()),
+
+a_tfinished_to_pfinished : petrinet!Arc(
+                nodesource <-t_finished,
+nodedestination <-p_finished,
+weigth <- 1 ,
+                        arc <- #normal,
+net <- wd.getProcess())
+
+}
+
+-- Traduire une WorkSequence en un motif sur le r�seau de Petri
+
+rule WorkSequence2PetriNet {
+from ws: simplepdl!WorkSequence
+to
+a_worksequence: petrinet!Arc (
+
+nodesource <- if (ws.linkType = #startToFinish or ws.linkType = #startToStart) then
+thisModule.resolveTemp(ws.predecessor, 'p_started')
+else
+thisModule.resolveTemp(ws.predecessor, 'p_finished')
+endif,
+
+nodedestination <- if (ws.linkType = #finishToStart or ws.linkType = #startToStart) then
+thisModule.resolveTemp(ws.successor, 't_started')
+else
+thisModule.resolveTemp(ws.successor, 't_finished')
+endif,
+
+weigth <- 1,
+arc <- #read_arc,
+net <- ws.successor.getProcess())
+}
+
+-- Ressource
+rule Ressources2PetriNet {
+	from rs: simplepdl!Ressources
+	to
+		ressource: petrinet!Place (
+			name <- rs.name,
+			tokens <- rs.quantity,
+			net <- rs.getProcess())
+						  
+}
+
+--Control
+rule Control2PetriNet {
+	
+	from control: simplepdl!Control
+	to
+	    a_take: petrinet!Arc(	    	
+	    	nodesource <- control.ressources,
+			nodedestination <- thisModule.resolveTemp(control.workdefinition, 't_start'),
+			weigth <- control.occurences,
+			arc <- #normal,
+			net <- control.ressources.getProcess()),
+		
+	    a_return: petrinet!Arc(	    	
+	    	nodesource <- thisModule.resolveTemp(control.workdefinition, 't_finish'),
+			nodedestination <- control.ressources,
+			weigth <- control.occurences,
+			arc <- #normal,
+			net <- control.ressources.getProcess()
+	    )
+
+}
